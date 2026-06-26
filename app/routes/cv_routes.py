@@ -12,7 +12,11 @@ from app.services.cv_service import (
     get_analysis_detail
 )
 
-from app.services.pdf_service import extract_text_from_pdf
+from app.services.pdf_service import (
+    extract_text_from_pdf,
+    validate_pdf_file,
+    PDFServiceError
+)
 
 router = APIRouter(
     prefix="/api/cv",
@@ -66,26 +70,24 @@ async def analyze_pdf(
     cv_file: UploadFile = File(...),
     job_description: str = Form(...)
 ):
-    if cv_file.content_type != "application/pdf":
-        raise HTTPException(
-            status_code=400,
-            detail="Only PDF files are allowed"
-        )
-
     file_bytes = await cv_file.read()
 
-    cv_text = extract_text_from_pdf(file_bytes)
-
-    if not cv_text:
-        raise HTTPException(
-            status_code=400,
-            detail="Could not extract text from PDF"
+    try:
+        validate_pdf_file(
+            file_bytes=file_bytes,
+            content_type=cv_file.content_type
         )
 
-    try:
+        cv_text = extract_text_from_pdf(file_bytes)
         return analyze_cv(
             cv_text=cv_text,
             job_description=job_description
+        )
+
+    except PDFServiceError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
         )
 
     except AIServiceError as error:
