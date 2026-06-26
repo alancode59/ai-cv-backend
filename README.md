@@ -1,26 +1,28 @@
 # AI CV Analyzer API
 
-Backend desarrollado con **FastAPI**, **MongoDB**, **Docker** y **Cerebras AI** para analizar automáticamente currículums (CV) utilizando modelos de Inteligencia Artificial.
+Backend desarrollado con **FastAPI**, **MongoDB**, **Docker** y **Cerebras AI** para analizar automáticamente currículums (CV) mediante Inteligencia Artificial.
 
-El sistema compara un CV con una descripción de puesto, calcula un porcentaje de compatibilidad y genera recomendaciones para mejorar el perfil del candidato.
+El sistema permite analizar un CV en formato texto o PDF, compararlo con una descripción de una vacante y generar una evaluación automática con porcentaje de compatibilidad, tecnologías detectadas, habilidades faltantes y recomendaciones para mejorar el perfil del candidato.
 
 ---
 
 # Tecnologías
 
+- Python 3.12
 - FastAPI
 - Docker
 - Docker Compose
 - MongoDB
 - PyMongo
 - Cerebras Cloud SDK
-- Python 3.12
+- PyMuPDF
+- python-multipart
 
 ---
 
 # Arquitectura
 
-```
+```text
 app/
 │
 ├── main.py
@@ -36,14 +38,16 @@ app/
 │
 ├── routes/
 │   ├── cv_routes.py
-│   └── health_routes.py
+│   ├── health_routes.py
+│   └── user_routes.py
 │
 ├── schemas/
 │   └── cv_schema.py
 │
 └── services/
     ├── ai_service.py
-    └── cv_service.py
+    ├── cv_service.py
+    └── pdf_service.py
 ```
 
 ---
@@ -56,15 +60,18 @@ app/
 - Persistencia en MongoDB.
 - Historial de análisis.
 - Consulta de análisis por ID.
-- Validación de respuestas de IA.
-- Manejo de errores.
-- API documentada automáticamente con Swagger.
+- Análisis de CV mediante texto.
+- Análisis de CV mediante archivos PDF.
+- Extracción automática de texto con PyMuPDF.
+- Validación de respuestas del modelo.
+- Manejo centralizado de errores.
+- Documentación automática con Swagger/OpenAPI.
 
 ---
 
 # Instalación
 
-## Clonar el proyecto
+## 1. Clonar el repositorio
 
 ```bash
 git clone <url-del-repositorio>
@@ -73,9 +80,27 @@ cd backend-cv
 
 ---
 
-## Variables de entorno
+## 2. Configurar variables de entorno
 
-Crear un archivo `.env`
+El proyecto incluye un archivo **`.env.example`** con la estructura necesaria.
+
+Copiar el archivo:
+
+### Linux / macOS
+
+```bash
+cp .env.example .env
+```
+
+### Windows
+
+```cmd
+copy .env.example .env
+```
+
+Editar el archivo `.env` con tus credenciales.
+
+Ejemplo:
 
 ```env
 MONGO_URI=mongodb://mongo:27017
@@ -87,19 +112,19 @@ CEREBRAS_MODEL=gpt-oss-120b
 
 ---
 
-## Ejecutar con Docker
+## 3. Ejecutar con Docker
 
 ```bash
 docker compose up --build
 ```
 
-La API estará disponible en
+La API estará disponible en:
 
 ```
 http://localhost:8000
 ```
 
-Swagger
+Documentación Swagger:
 
 ```
 http://localhost:8000/docs
@@ -113,7 +138,7 @@ http://localhost:8000/docs
 
 ### Estado del servidor
 
-```
+```http
 GET /health
 ```
 
@@ -121,7 +146,7 @@ Respuesta
 
 ```json
 {
-    "status":"OK"
+    "status": "OK"
 }
 ```
 
@@ -129,7 +154,7 @@ Respuesta
 
 ### Estado de MongoDB
 
-```
+```http
 GET /health/db
 ```
 
@@ -137,7 +162,7 @@ GET /health/db
 
 ### Estado de Cerebras
 
-```
+```http
 GET /health/ai
 ```
 
@@ -145,42 +170,43 @@ GET /health/ai
 
 ### Modelos disponibles
 
-```
+```http
 GET /health/ai/models
 ```
 
 ---
 
-## CV Analysis
+# CV Analysis
 
-### Analizar CV
+## Analizar CV mediante texto
 
-```
+```http
 POST /api/cv/analyze
 ```
 
-Request
+### Request
 
 ```json
 {
-    "cv_text":"Python FastAPI Docker MongoDB",
-    "job_description":"Backend Developer con Python y AWS"
+    "cv_text": "Python FastAPI Docker MongoDB",
+    "job_description": "Backend Developer con Python y AWS"
 }
 ```
 
-Respuesta
+### Response
 
 ```json
 {
-    "score":87,
-    "skills_detectadas":[
+    "score": 87,
+    "skills_detectadas": [
         "Python",
-        "Docker"
+        "Docker",
+        "FastAPI"
     ],
-    "skills_faltantes":[
+    "skills_faltantes": [
         "AWS"
     ],
-    "recomendaciones":[
+    "recomendaciones": [
         "Agregar experiencia con AWS"
     ]
 }
@@ -188,44 +214,82 @@ Respuesta
 
 ---
 
-### Historial
+## Analizar CV mediante PDF
+
+```http
+POST /api/cv/analyze-pdf
+```
+
+Tipo de contenido:
 
 ```
-GET /api/cv/history
+multipart/form-data
 ```
+
+### Parámetros
+
+| Campo | Tipo | Obligatorio |
+|--------|------|-------------|
+| cv_file | PDF | Sí |
+| job_description | String | Sí |
+
+### Flujo
+
+1. Se valida que el archivo sea un PDF.
+2. Se extrae automáticamente el texto del documento.
+3. El texto se envía a Cerebras AI.
+4. Se genera el análisis del CV.
+5. Se almacena el resultado en MongoDB.
+6. Se devuelve la respuesta en formato JSON.
 
 ---
 
-### Detalle de un análisis
+## Historial de análisis
 
+```http
+GET /api/cv/history
 ```
+
+Obtiene todos los análisis almacenados.
+
+---
+
+## Obtener análisis por ID
+
+```http
 GET /api/cv/history/{analysis_id}
 ```
+
+Obtiene el detalle de un análisis específico.
 
 ---
 
 # Flujo del sistema
 
-```
-Cliente
-    │
-    ▼
-FastAPI
-    │
-    ▼
-cv_service
-    │
-    ▼
-ai_service
-    │
-    ▼
-Cerebras AI
-    │
-    ▼
-MongoDB
-    │
-    ▼
-Respuesta JSON
+```text
+               PDF / Texto
+                    │
+                    ▼
+            FastAPI Routes
+                    │
+                    ▼
+              CV Service
+                    │
+        ┌───────────┴───────────┐
+        ▼                       ▼
+   PDF Service             AI Service
+        │                       │
+        ▼                       ▼
+Extracción de texto       Cerebras AI
+        └───────────┬───────────┘
+                    ▼
+             Repository Pattern
+                    │
+                    ▼
+                MongoDB
+                    │
+                    ▼
+              Respuesta JSON
 ```
 
 ---
@@ -236,6 +300,7 @@ Respuesta JSON
 
 - FastAPI
 - Docker
+- Docker Compose
 - Hot Reload
 
 ## Sprint 2 ✅
@@ -246,34 +311,56 @@ Respuesta JSON
 
 ## Sprint 3 ✅
 
-- Cerebras AI
+- Integración con Cerebras AI
 - Prompt Engineering
 - Análisis inteligente de CV
 
 ## Sprint 4 ✅
 
-- Validación de respuestas IA
+- Validación de respuestas de IA
 - Manejo de errores
 - HTTP 502 para errores del proveedor
 - Validación de estructura JSON
 
-## Sprint 5 🚧
+## Sprint 5 ✅
 
-- Upload de PDF
-- Extracción de texto
-- Análisis automático desde archivos
+- Upload de archivos PDF
+- Extracción automática de texto
+- Integración PDF → IA
+- Persistencia del análisis
 
-## Sprint 6
+## Sprint 6 🚧
 
-- Frontend Vue 3
+- Validaciones avanzadas de archivos
+- Límite de tamaño de PDF
+- Manejo de PDFs protegidos
+- Soporte para OCR en PDFs escaneados
+- Limpieza y normalización del texto extraído
 
 ## Sprint 7
 
-- Autenticación JWT
+- Frontend con HTML + Tailwind CSS
+- Dashboard de resultados
+- Historial visual
 
 ## Sprint 8
 
-- Dashboard de análisis
+- Autenticación JWT
+- Gestión de usuarios
+- Dashboard administrativo
+
+---
+
+# Buenas prácticas implementadas
+
+- Arquitectura por capas.
+- Repository Pattern.
+- Separación entre rutas, servicios y acceso a datos.
+- Prompt Engineering desacoplado.
+- Variables de entorno mediante `.env`.
+- Archivo `.env.example` para facilitar la configuración del proyecto.
+- `.dockerignore` para optimizar la construcción de imágenes Docker.
+- `.gitignore` para excluir archivos temporales y sensibles.
 
 ---
 
