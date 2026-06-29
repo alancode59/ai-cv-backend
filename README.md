@@ -320,18 +320,15 @@ de texto                  │
 * Limpieza y normalización del texto
 * Manejo de errores de extracción
 
-## Sprint 7 🚧
+## Sprint 7 ✅
 
 * Interfaz web con Jinja2 Templates
 * Diseño moderno y profesional
 * Visualización del resultado del análisis
-* Historial visual de análisis
 
 ## Sprint 8
 
-* Autenticación JWT
-* Gestión de usuarios
-* Dashboard administrativo
+* Deploy - Producción
 
 ---
 
