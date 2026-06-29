@@ -515,3 +515,36 @@ textarea::placeholder {
     overflow: hidden;
     clip: rect(0 0 0 0);
 }
+
+.reset-btn {
+    width: 100%;
+    margin-top: 12px;
+    background: transparent;
+    color: var(--navy);
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+    padding: 13px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+.reset-btn:hover {
+    border-color: var(--navy);
+    background: var(--paper);
+}
+
+
+.score-low {
+    background: var(--terra);
+}
+
+.score-medium {
+    background: var(--bronze);
+}
+
+.score-high {
+    background: var(--sage);
+}
