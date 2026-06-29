@@ -8,15 +8,20 @@ El sistema permite analizar un CV en formato texto o PDF, compararlo con una des
 
 # Tecnologías
 
-- Python 3.12
-- FastAPI
-- Docker
-- Docker Compose
-- MongoDB
-- PyMongo
-- Cerebras Cloud SDK
-- PyMuPDF
-- python-multipart
+* Python 3.12
+* FastAPI
+* Jinja2 Templates
+* Docker
+* Docker Compose
+* MongoDB
+* PyMongo
+* Cerebras Cloud SDK
+* PyMuPDF
+* python-multipart
+* HTML5
+* CSS3
+* JavaScript
+* Tailwind CSS (CDN)
 
 ---
 
@@ -44,28 +49,42 @@ app/
 ├── schemas/
 │   └── cv_schema.py
 │
-└── services/
-    ├── ai_service.py
-    ├── cv_service.py
-    └── pdf_service.py
+├── services/
+│   ├── ai_service.py
+│   ├── cv_service.py
+│   └── pdf_service.py
+│
+├── templates/
+│   └── index.html
+│
+└── static/
+    ├── css/
+    │   └── styles.css
+    ├── js/
+    │   └── app.js
+    └── uploads/
 ```
 
 ---
 
 # Características
 
-- Arquitectura por capas.
-- Integración con Cerebras AI.
-- Prompt Engineering desacoplado.
-- Persistencia en MongoDB.
-- Historial de análisis.
-- Consulta de análisis por ID.
-- Análisis de CV mediante texto.
-- Análisis de CV mediante archivos PDF.
-- Extracción automática de texto con PyMuPDF.
-- Validación de respuestas del modelo.
-- Manejo centralizado de errores.
-- Documentación automática con Swagger/OpenAPI.
+* Arquitectura por capas.
+* Integración con Cerebras AI.
+* Prompt Engineering desacoplado.
+* Persistencia en MongoDB.
+* Historial de análisis.
+* Consulta de análisis por ID.
+* Análisis de CV mediante texto.
+* Análisis de CV mediante archivos PDF.
+* Validación avanzada de archivos PDF.
+* Extracción automática de texto con PyMuPDF.
+* Limpieza y normalización del texto extraído.
+* Validación de respuestas del modelo.
+* Manejo centralizado de errores.
+* Interfaz web integrada mediante Jinja2 Templates.
+* Recursos estáticos organizados (HTML, CSS y JavaScript).
+* Documentación automática mediante Swagger/OpenAPI.
 
 ---
 
@@ -84,8 +103,6 @@ cd backend-cv
 
 El proyecto incluye un archivo **`.env.example`** con la estructura necesaria.
 
-Copiar el archivo:
-
 ### Linux / macOS
 
 ```bash
@@ -98,9 +115,7 @@ cp .env.example .env
 copy .env.example .env
 ```
 
-Editar el archivo `.env` con tus credenciales.
-
-Ejemplo:
+Editar el archivo `.env`:
 
 ```env
 MONGO_URI=mongodb://mongo:27017
@@ -118,13 +133,19 @@ CEREBRAS_MODEL=gpt-oss-120b
 docker compose up --build
 ```
 
-La API estará disponible en:
+La aplicación estará disponible en:
 
 ```
 http://localhost:8000
 ```
 
-Documentación Swagger:
+Interfaz web:
+
+```
+http://localhost:8000/
+```
+
+Swagger:
 
 ```
 http://localhost:8000/docs
@@ -142,31 +163,17 @@ http://localhost:8000/docs
 GET /health
 ```
 
-Respuesta
-
-```json
-{
-    "status": "OK"
-}
-```
-
----
-
 ### Estado de MongoDB
 
 ```http
 GET /health/db
 ```
 
----
-
 ### Estado de Cerebras
 
 ```http
 GET /health/ai
 ```
-
----
 
 ### Modelos disponibles
 
@@ -184,34 +191,6 @@ GET /health/ai/models
 POST /api/cv/analyze
 ```
 
-### Request
-
-```json
-{
-    "cv_text": "Python FastAPI Docker MongoDB",
-    "job_description": "Backend Developer con Python y AWS"
-}
-```
-
-### Response
-
-```json
-{
-    "score": 87,
-    "skills_detectadas": [
-        "Python",
-        "Docker",
-        "FastAPI"
-    ],
-    "skills_faltantes": [
-        "AWS"
-    ],
-    "recomendaciones": [
-        "Agregar experiencia con AWS"
-    ]
-}
-```
-
 ---
 
 ## Analizar CV mediante PDF
@@ -220,7 +199,7 @@ POST /api/cv/analyze
 POST /api/cv/analyze-pdf
 ```
 
-Tipo de contenido:
+**Content-Type**
 
 ```
 multipart/form-data
@@ -228,19 +207,22 @@ multipart/form-data
 
 ### Parámetros
 
-| Campo | Tipo | Obligatorio |
-|--------|------|-------------|
-| cv_file | PDF | Sí |
-| job_description | String | Sí |
+| Campo           | Tipo   | Obligatorio |
+| --------------- | ------ | ----------- |
+| cv_file         | PDF    | Sí          |
+| job_description | String | Sí          |
 
 ### Flujo
 
-1. Se valida que el archivo sea un PDF.
-2. Se extrae automáticamente el texto del documento.
-3. El texto se envía a Cerebras AI.
-4. Se genera el análisis del CV.
-5. Se almacena el resultado en MongoDB.
-6. Se devuelve la respuesta en formato JSON.
+1. Validación del archivo.
+2. Verificación del tipo MIME.
+3. Validación del tamaño máximo permitido.
+4. Detección de PDFs protegidos.
+5. Extracción automática del texto.
+6. Limpieza y normalización del contenido.
+7. Análisis mediante Cerebras AI.
+8. Persistencia en MongoDB.
+9. Respuesta en formato JSON.
 
 ---
 
@@ -250,8 +232,6 @@ multipart/form-data
 GET /api/cv/history
 ```
 
-Obtiene todos los análisis almacenados.
-
 ---
 
 ## Obtener análisis por ID
@@ -260,36 +240,38 @@ Obtiene todos los análisis almacenados.
 GET /api/cv/history/{analysis_id}
 ```
 
-Obtiene el detalle de un análisis específico.
-
 ---
 
 # Flujo del sistema
 
 ```text
-               PDF / Texto
-                    │
-                    ▼
-            FastAPI Routes
-                    │
-                    ▼
-              CV Service
-                    │
-        ┌───────────┴───────────┐
-        ▼                       ▼
-   PDF Service             AI Service
-        │                       │
-        ▼                       ▼
-Extracción de texto       Cerebras AI
-        └───────────┬───────────┘
-                    ▼
-             Repository Pattern
-                    │
-                    ▼
-                MongoDB
-                    │
-                    ▼
-              Respuesta JSON
+             Usuario
+                 │
+                 ▼
+        Interfaz Web (Jinja2)
+                 │
+                 ▼
+         FastAPI Routes
+                 │
+                 ▼
+           CV Service
+                 │
+      ┌──────────┴──────────┐
+      ▼                     ▼
+ PDF Service          AI Service
+      │                     │
+      ▼                     ▼
+Extracción           Cerebras AI
+de texto                  │
+      └──────────┬─────────┘
+                 ▼
+         Repository Pattern
+                 │
+                 ▼
+              MongoDB
+                 │
+                 ▼
+         Respuesta JSON
 ```
 
 ---
@@ -298,69 +280,72 @@ Extracción de texto       Cerebras AI
 
 ## Sprint 1 ✅
 
-- FastAPI
-- Docker
-- Docker Compose
-- Hot Reload
+* FastAPI
+* Docker
+* Docker Compose
+* Hot Reload
 
 ## Sprint 2 ✅
 
-- MongoDB
-- Repository Pattern
-- Historial de análisis
+* MongoDB
+* Repository Pattern
+* Historial de análisis
 
 ## Sprint 3 ✅
 
-- Integración con Cerebras AI
-- Prompt Engineering
-- Análisis inteligente de CV
+* Integración con Cerebras AI
+* Prompt Engineering
+* Análisis inteligente de CV
 
 ## Sprint 4 ✅
 
-- Validación de respuestas de IA
-- Manejo de errores
-- HTTP 502 para errores del proveedor
-- Validación de estructura JSON
+* Validación de respuestas de IA
+* Manejo de errores
+* HTTP 502 para errores del proveedor
+* Validación de estructura JSON
 
 ## Sprint 5 ✅
 
-- Upload de archivos PDF
-- Extracción automática de texto
-- Integración PDF → IA
-- Persistencia del análisis
+* Upload de archivos PDF
+* Extracción automática de texto
+* Integración PDF → IA
+* Persistencia del análisis
 
-## Sprint 6 🚧
+## Sprint 6 ✅
 
-- Validaciones avanzadas de archivos
-- Límite de tamaño de PDF
-- Manejo de PDFs protegidos
-- Soporte para OCR en PDFs escaneados
-- Limpieza y normalización del texto extraído
+* Validaciones avanzadas de archivos PDF
+* Límite de tamaño
+* Verificación del tipo MIME
+* Manejo de PDFs protegidos
+* Limpieza y normalización del texto
+* Manejo de errores de extracción
 
-## Sprint 7
+## Sprint 7 🚧
 
-- Frontend con HTML + Tailwind CSS
-- Dashboard de resultados
-- Historial visual
+* Interfaz web con Jinja2 Templates
+* Diseño moderno y profesional
+* Visualización del resultado del análisis
+* Historial visual de análisis
 
 ## Sprint 8
 
-- Autenticación JWT
-- Gestión de usuarios
-- Dashboard administrativo
+* Autenticación JWT
+* Gestión de usuarios
+* Dashboard administrativo
 
 ---
 
 # Buenas prácticas implementadas
 
-- Arquitectura por capas.
-- Repository Pattern.
-- Separación entre rutas, servicios y acceso a datos.
-- Prompt Engineering desacoplado.
-- Variables de entorno mediante `.env`.
-- Archivo `.env.example` para facilitar la configuración del proyecto.
-- `.dockerignore` para optimizar la construcción de imágenes Docker.
-- `.gitignore` para excluir archivos temporales y sensibles.
+* Arquitectura por capas.
+* Repository Pattern.
+* Separación entre rutas, servicios y acceso a datos.
+* Prompt Engineering desacoplado.
+* Variables de entorno mediante `.env`.
+* Archivo `.env.example` para facilitar la configuración.
+* Organización de recursos estáticos (`templates`, `css`, `js`).
+* `.dockerignore` para optimizar la construcción de imágenes.
+* `.gitignore` para excluir archivos temporales y sensibles.
 
 ---
 

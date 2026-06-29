@@ -5,3 +5,4 @@ cerebras-cloud-sdk
 python-dotenv
 PyMuPDF
 python-multipart
+jinja2

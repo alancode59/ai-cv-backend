@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Análisis de coincidencia de CV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+
+<body>
+    <main class="shell">
+
+        <div class="masthead">
+            <div class="masthead-left">
+                <div class="mark">CV</div>
+                <div>
+                    <h1>Análisis de coincidencia de currículum</h1>
+                    <p>Compara un CV en PDF contra los requisitos de una vacante.</p>
+                </div>
+            </div>
+            <div class="masthead-right">Informe automatizado<br>Generado por IA</div>
+        </div>
+
+        <form id="cvForm" class="grid">
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Datos de entrada</h2>
+                    <span class="step">01</span>
+                </div>
+                <div class="panel-body">
+                    <div class="field">
+                        <label for="cvFile">Currículum</label>
+                        <label class="dropzone" id="dropzone" for="cvFile">
+                            <div class="dz-icon">PDF</div>
+                            <div class="dz-text">
+                                <strong id="dzFileName">Seleccionar o arrastrar archivo</strong>
+                                <span>Formato PDF únicamente</span>
+                            </div>
+                            <input type="file" id="cvFile" accept="application/pdf" required>
+                        </label>
+                    </div>
+
+                    <div class="field">
+                        <label for="jobDescription">Descripción de la vacante</label>
+                        <textarea id="jobDescription" required rows="9"
+                            placeholder="Responsabilidades, requisitos y habilidades clave del puesto..."></textarea>
+                        <p class="hint">Cuanto más completa sea la descripción, más preciso será el dictamen.</p>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">Generar análisis</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Dictamen</h2>
+                    <span class="step">02</span>
+                </div>
+                <div class="panel-body">
+
+                    <div class="state active" id="stateEmpty">
+                        <div class="placeholder">
+                            <span class="eyebrow">En espera</span>
+                            <p>El informe de coincidencia se generará aquí una vez completados los datos de entrada.</p>
+                        </div>
+                    </div>
+
+                    <div class="state" id="stateLoading">
+                        <div class="loading-wrap">
+                            <div class="loading-track"></div>
+                            <p id="loadingText">Procesando currículum…</p>
+                        </div>
+                    </div>
+
+                    <div class="state" id="stateResult">
+                        <h2 class="sr-only">Resultado del análisis</h2>
+                        <div class="verdict-row">
+                            <span class="verdict-score" id="scoreNum">0%</span>
+                            <span class="verdict-label">
+                                <strong>Índice de coincidencia</strong>
+                                respecto a la vacante descrita
+                            </span>
+                        </div>
+                        <div class="meter">
+                            <div class="meter-fill" id="scoreBar"></div>
+                        </div>
+
+                        <div class="block">
+                            <h3>Competencias detectadas</h3>
+                            <div class="chip-row" id="skillsDetectadas"></div>
+                        </div>
+
+                        <div class="block">
+                            <h3>Brechas identificadas</h3>
+                            <div class="chip-row" id="skillsFaltantes"></div>
+                        </div>
+
+                        <div class="block">
+                            <h3>Recomendaciones</h3>
+                            <ul class="reco-list" id="recomendaciones"></ul>
+                        </div>
+                    </div>
+
+                    <div class="state" id="stateError">
+                        <div class="error-box">
+                            <strong>No fue posible completar el análisis</strong>
+                            <span id="errorMsg"></span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </form>
+
+    </main>
+    <script src="/static/js/app.js"></script>
+</body>
+
+</html>
