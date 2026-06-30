@@ -548,3 +548,44 @@ textarea::placeholder {
 .score-high {
     background: var(--sage);
 }
+
+
+.footer {
+    margin-top: 2.5rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--line);
+    text-align: center;
+}
+
+.footer p {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin: 0;
+    font-size: .9rem;
+    color: var(--muted);
+}
+
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    color: var(--ink);
+    text-decoration: none;
+    transition: color .2s ease;
+}
+
+.github-link:hover {
+    color: var(--accent);
+}
+
+.github-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.footer-separator {
+    color: #bdbdbd;
+}
